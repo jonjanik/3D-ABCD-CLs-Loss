@@ -1,17 +1,17 @@
-# ABCD-CLsLoss
+# End-to-end optimized CLs Loss for the 3D ABCDisCoTEC method
 
-End‑to‑end differentiable **CLs** loss for a 3D **ABCD** method with live non‑closure estimation and implicit differentiation through profile‑likelihood fits.
+Fully differentiable **CLs** loss for a 3D **ABCD** (Double-DisCo-based) method with non‑closure optimization through live estimation and implicit differentiation through profile‑likelihood fits via pure pytorch implementation.
 
-This repository provides a standalone PyTorch module `CLsLoss` that you can plug into your own training loop. It is intentionally framework‑agnostic (no tight coupling to private code).
+This repository provides a PyTorch module `CLsLoss` that you can plug into your own training loop of your Double DisCo method.
 
-> **Status:** research prototype — numerically sensitive. Expect to tune damping/regularization and batching for stability.
+> **Status:** first research prototype — numerically sensitive. To be used in combination with BCE and resonant-feature-binned closure contrained losses in the Modified Differential Multiplier Method.
 
 ---
 
 ## What it does
 
-- Takes **two DNN scores** and forms **ABCD** regions using **smooth (sigmoid) gates** so the region assignment is differentiable.
-- Builds **binned histograms** of a final discriminant (e.g. the resonant observable `m_T`) separately for **signal** and **background** in regions **A,B,C,D**.
+- Takes **two DNN scores** and forms **ABCD** regions using **smooth sigmoid gates** so the region assignment is differentiable.
+- Builds **binned histograms** of a final discriminant (e.g. the resonant observable) separately for **signal** and **background** in regions **A,B,C,D**.
 - Implements the likelihood
 
 \[
@@ -23,7 +23,7 @@ This repository provides a standalone PyTorch module `CLsLoss` that you can plug
 \mathrm{Gaus}(\theta_i\mid 0,1)
 \]
 
-with a **bin‑wise nuisance** \(\theta_i\) controlling the **non‑closure** via \((1+\delta)^{\theta_i}\). The non‑closure `δ` is (re)estimated on the fly from observed/predicted B yields.
+with a **bin‑wise nuisance** \(\theta_i\) controlling the **non‑closure** via \((1+\delta)^{\theta_i}\). The non‑closure `δ` is (re)estimated on the fly from observed/predicted signal background yields in the signal region.
 - Runs three profile‑likelihood fits **inside the forward pass** (using `iminuit`) and **back‑propagates through them** using **implicit differentiation** (IFT).
 - Produces the test statistic \(q_\mu\) and returns an approximate **CLs‑motivated loss** proportional to \(p_{s+b}(\sqrt{q_\mu})\).
 
@@ -32,14 +32,6 @@ with a **bin‑wise nuisance** \(\theta_i\) controlling the **non‑closure** vi
 ```bash
 pip install -U pip wheel
 pip install torch numpy iminuit
-# (optional) for examples/tests
-pip install pytest
-```
-
-Or install the package itself (editable):
-
-```bash
-pip install -e .
 ```
 
 ## Quick start
@@ -68,8 +60,6 @@ cls_loss = loss_fn(
 cls_loss.backward()
 ```
 
-See `examples/quickstart.py` for a runnable toy example that exercises the code paths.
-
 ## API
 
 `CLsLoss(mt_bin_edges, mt_min, mt_max, int_lumi=117100, epsilon=1e-6, steepness=20, num_retries=5)`
@@ -96,10 +86,6 @@ See `examples/quickstart.py` for a runnable toy example that exercises the code 
 - We regularize/invert an approximate Hessian (Jacobian of the stationarity conditions) with a small ridge term; tweak `lambd` in the code if needed.
 - Binning aggregates the whole dataset enabling **full‑batch** training to avoid mini‑batch biases commonly seen with distance‑correlation/closure losses.
 
-## License
-
-MIT — see `LICENSE`.
-
 ## Citation
 
-If this helps your work, please cite the repository and describe it as **3D ABCDisCoTEC with differentiable CLs loss (ABCD‑CLsLoss)**.
+If this helps your work, please cite the repository.
