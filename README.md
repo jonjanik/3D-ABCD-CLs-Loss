@@ -14,14 +14,7 @@ This repository provides a PyTorch module `CLsLoss` that you can plug into your 
 - Builds **binned histograms** of a final discriminant (e.g. the resonant observable) separately for **signal** and **background** in regions **A,B,C,D**.
 - Implements the likelihood
 
-\[
-\mathcal{L} = \prod_i \prod_{r\in\{A,C,D\}}
-\mathrm{Pois}^{(i)}\big(N_{r}^{i,\mathrm{obs}} \mid B_{r}^{i,\exp} + \mu\,S_{r}^{i,\exp}\big)\;
-\times\;
-\mathrm{Pois}^{(i)}\!\left(N_{B}^{i,\mathrm{obs}} \mid \mathrm{TF}^i\,B_{A}^{i,\exp}\,(1+\delta)^{\theta_i} + \mu\,S_{B}^{i,\exp}\right)\;
-\times\;
-\mathrm{Gaus}(\theta_i\mid 0,1)
-\]
+![Likelihood formula](docs/images/likelihood.png)
 
 with a **bin‑wise nuisance** \(\theta_i\) controlling the **non‑closure** via \((1+\delta)^{\theta_i}\). The non‑closure `δ` is (re)estimated on the fly from observed/predicted signal background yields in the signal region.
 - Runs three profile‑likelihood fits **inside the forward pass** (using `iminuit`) and **back‑propagates through them** using **implicit differentiation** (IFT).
