@@ -17,7 +17,8 @@ This repository provides a PyTorch module `CLsLoss` that you can plug into your 
 ![Likelihood formula](docs/images/likelihood.png)
 
 with a bin-wise **non‑closure uncertainty** \((1+`δ`)\) constrained via **nuisance parameter** `θ`. The non‑closure `δ` is (re)estimated on the fly from observed/predicted background yields in the signal region.
-- Runs three profile‑likelihood fits **inside the forward pass** (using `iminuit`) and **back‑propagates through them** using **implicit differentiation** (IFT).
+- Runs three profile‑likelihood fits **inside the forward pass** (using `iminuit`) and **back‑propagates through them** using custom implementation of **implicit differentiation** (IFT):
+  One background-only fit to initialize nuisance parameters, to produce an a-posteriori asimov that is refitted twice (S+B) - one for mu=1 and one for floating mu. 
 - Produces the profile likelihood ratio test statistic and returns an approximate **CLs‑motivated loss**.
 
 ## Install
