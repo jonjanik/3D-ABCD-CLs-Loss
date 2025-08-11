@@ -4,7 +4,7 @@ Fully differentiable **CLs** loss for a 3D **ABCD** (Double-DisCo-based) method 
 
 This repository provides a PyTorch module `CLsLoss` that you can plug into your own training loop of your Double DisCo method.
 
-> **Status:** first research prototype — numerically sensitive. To be used in combination with BCE and resonant-feature-binned closure contrained losses in the Modified Differential Multiplier Method.
+> **Status:** first research prototype — numerically sensitive. To be used in combination with BCE and resonant-feature-binned closure contrained losses in the Modified Differential Multiplier Method. Additional uncertainties (e.g. signal shape and normalization systematics) are to be added in the future.
 
 ---
 
