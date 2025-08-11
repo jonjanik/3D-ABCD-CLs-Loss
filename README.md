@@ -46,7 +46,6 @@ cls_loss = loss_fn(
     features=X,
     cuts=(0.5, 0.5),
     weights_xs=w_xs,
-    weights_train=w_train,  # currently unused, keep for future extensions
     target=y.to(torch.long),
     data_dict={"constraint_MT01FatJetMET": mt_scaled}  # scaled to [0,1]
 )
@@ -69,7 +68,6 @@ cls_loss.backward()
 - `features`: tensor batch passed to both models.
 - `cuts`: `(cut1, cut2)` thresholds for ABCD.
 - `weights_xs`: per‑event weights (e.g. xs * k‑factors / Ngen).
-- `weights_train`: reserved (not used in this version).
 - `target`: 0 for background, 1 for signal.
 - `data_dict['constraint_MT01FatJetMET']`: final discriminant scaled to `[0,1]` (will be mapped to `[mt_min, mt_max]`).
 
