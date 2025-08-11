@@ -34,9 +34,9 @@ import torch
 from abcd_clsloss import CLsLoss
 
 # toy binning and ranges of your final discriminant
-mt_edges = torch.linspace(200., 2000., steps=17)  # 16 bins
+mt_edges = torch.linspace(650., 2000., steps=17)  # 16 bins
 
-loss_fn = CLsLoss(mt_bin_edges=mt_edges, mt_min=200., mt_max=2000.)
+loss_fn = CLsLoss(mt_bin_edges=mt_edges, mt_min=650., mt_max=2000.)
 
 # f1,f2 are DNN outputs from your own models (sigmoids not required here)
 # features, target, weights_xs, data_dict come from your pipeline
