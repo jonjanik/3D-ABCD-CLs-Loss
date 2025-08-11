@@ -1,9 +1,6 @@
-# Copyright (c) 2025
-# MIT License
-#
 # Differentiable CLs loss for ABCD with implicit differentiation through
-# profile-likelihood fits. This module is intentionally standalone so it can
-# be used inside external/private training frameworks.
+# profile-likelihood fits. This module is NOT standalone and intended to
+# be used together with MDMM constrained BCE and closure losses.
 
 from __future__ import annotations
 
@@ -13,7 +10,7 @@ from torch import nn
 from torch.distributions.normal import Normal
 
 # iminuit is used as a very fast/robust local optimizer for the small
-# per-bin profile-likelihood fits. It is treated as a black box in the
+# profile-likelihood fits. It is treated as a black box in the
 # forward pass; gradients are recovered via implicit differentiation.
 from iminuit import Minuit
 
@@ -33,7 +30,7 @@ class CLsLoss(nn.Module):
     """
     def __init__(self, mt_bin_edges: torch.Tensor, mt_min: float, mt_max: float,
                  int_lumi: float = 117100, epsilon: float = 1e-6,
-                 steepness: float = 20.0, num_retries: int = 5):
+                 steepness: float = 20.0):
         super().__init__()
         self.register_buffer('mt_bin_edges', mt_bin_edges)
         self.mt_min = float(mt_min)
@@ -41,7 +38,6 @@ class CLsLoss(nn.Module):
         self.epsilon = float(epsilon)
         self.int_lumi = float(int_lumi)
         self.steepness = float(steepness)
-        self.num_retries = int(num_retries)
 
     # ------------ Region assignment (differentiable) -------------------------
     class RegionAssignment(torch.autograd.Function):
@@ -132,7 +128,7 @@ class CLsLoss(nn.Module):
             hist[i] = (weights * region_mask * in_bin.float() * self.int_lumi).sum()
         return hist
 
-    # ----------------------- Likelihood pieces -------------------------------
+    # ----------------------- for Likelihood -------------------------------
     def pois_llh(self, obs: torch.Tensor, exp: torch.Tensor):
         """Poisson log-likelihood, ignoring constants independent of parameters."""
         return obs * torch.log(exp + self.epsilon) - exp - torch.lgamma(obs + 1)
@@ -344,7 +340,7 @@ class CLsLoss(nn.Module):
 
     # ----------------------------- Forward -----------------------------------
     def forward(self, models, features, cuts,
-                weights_xs, weights_train, target, data_dict):
+                weights_xs, target, data_dict):
         """
         Compute CLs-like loss.
 
@@ -358,8 +354,6 @@ class CLsLoss(nn.Module):
             Thresholds for ABCD on (f1, f2) respectively.
         weights_xs : Tensor
             Per-event weights used to scale histograms (interpreted as xs).
-        weights_train : Tensor
-            Currently unused (kept for compatibility / future use).
         target : Tensor[0 or 1]
             Event labels: 0=background, 1=signal.
         data_dict : dict
@@ -388,11 +382,11 @@ class CLsLoss(nn.Module):
         B_C = self.compute_mt_hist(mt[bg],  weights_xs[bg],  in_C[bg])
         B_D = self.compute_mt_hist(mt[bg],  weights_xs[bg],  in_D[bg])
 
-        # Scale down signal templates if they correspond to multiple mass points mirrored, etc.
-        S_A = self.compute_mt_hist(mt[sig], weights_xs[sig], in_A[sig]) / 33.0
-        S_B = self.compute_mt_hist(mt[sig], weights_xs[sig], in_B[sig]) / 33.0
-        S_C = self.compute_mt_hist(mt[sig], weights_xs[sig], in_C[sig]) / 33.0
-        S_D = self.compute_mt_hist(mt[sig], weights_xs[sig], in_D[sig]) / 33.0
+        # signal templates
+        S_A = self.compute_mt_hist(mt[sig], weights_xs[sig], in_A[sig])
+        S_B = self.compute_mt_hist(mt[sig], weights_xs[sig], in_B[sig])
+        S_C = self.compute_mt_hist(mt[sig], weights_xs[sig], in_C[sig])
+        S_D = self.compute_mt_hist(mt[sig], weights_xs[sig], in_D[sig])
 
         # 1) Background-only fit to initialize nuisances using current templates
         mu_bkg = torch.tensor(0.0, device=B_A.device, dtype=B_A.dtype)
@@ -404,7 +398,7 @@ class CLsLoss(nn.Module):
         nC_bkg = p_bkg[2*nbin:3*nbin]
         nD_bkg = p_bkg[3*nbin:4*nbin]
 
-        # 2) Asimov counts for μ=0 with nuisance θ_bkg (posterior Asimov)
+        # 2) a-posteriori Asimov counts for μ=0 with nuisance θ_bkg
         bkg_SR_asim = (nA_bkg * nD_bkg / (nC_bkg + self.epsilon)) \
                       * (1.0 + self.compute_delta(B_A, B_B, B_C, B_D)).pow(θ_bkg)
 
@@ -433,6 +427,7 @@ class CLsLoss(nn.Module):
         sqrt_q = torch.sqrt(torch.clamp(qmu, min=0.0))
         p_sb = 1.0 - normal.cdf(sqrt_q)
 
-        # Scaled for convenience; users may combine with other losses via M-DMM
+        # Scaled for convenience; users should combine with other losses (BCE, closure, ...) via MDMM
         cls_loss = 2.0 * p_sb
+                    
         return cls_loss
