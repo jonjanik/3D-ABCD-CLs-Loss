@@ -1,4 +1,4 @@
-# End-to-end optimized CLs Loss for the 3D ABCDisCoTEC method
+# End-to-end optimized CLs Loss for the 3D ABCDisCoTEC Method
 
 Fully differentiable **CLs** loss for a 3D **ABCD** (Double-DisCo-based) method with non‑closure optimization through live estimation and implicit differentiation through profile‑likelihood fits via pure pytorch implementation.
 
