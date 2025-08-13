@@ -249,7 +249,7 @@ class CLsLoss(nn.Module):
                     grads.append(grad_input)
 
                 # Return gradients in the same order as inputs; None for module/mu slot already consumed
-                return (None, *grads, None, None)
+                return (*grads, None, None)
 
     def fit_params(self,
                    obs_A, obs_B, obs_C, obs_D,
@@ -330,7 +330,7 @@ class CLsLoss(nn.Module):
                     grad_input = - (J_px.T @ (invH @ grad_p))
                     grads.append(grad_input)
 
-                return (None, *grads, None)
+                return (*grads, None)
 
     def fit_paramsMu(self,
                      obs_A, obs_B, obs_C, obs_D,
