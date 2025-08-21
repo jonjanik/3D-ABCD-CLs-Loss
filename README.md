@@ -74,7 +74,7 @@ cls_loss.backward()
 
 ## Notes on stability
 
-- The forward pass runs several small `iminuit` fits. They’re fast for \(\mathcal{O}(10^1\!-\!10^2)\) bins but can be stiff.
+- The forward pass runs several small `iminuit` fits. They are fast for 5-20 bins but can be stiff.
 - We regularize/invert an approximate Hessian (Jacobian of the stationarity conditions) with a small ridge term; tweak `lambd` in the code if needed.
 - Binning aggregates the whole dataset enabling **full‑batch** training to avoid mini‑batch biases commonly seen with distance‑correlation/closure losses.
 
